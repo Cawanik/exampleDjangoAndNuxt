@@ -1,45 +1,63 @@
 <template>
-  <header>
-    <div class="text-box">
-      <h1>Всем хай</h1>
-      <p class="mt-3">Список долбоебов</p>
-      <nuxt-link class="btn btn-outline btn-large btn-info" to="/humans">
-        Посмотреть долбоебов
-      </nuxt-link>
-    </div>
-  </header>
+  <v-container>
+    <v-row class="list__cafes-title">
+      <v-col>
+        <h1 class="text-center text-h1">All humans in database</h1>
+      </v-col>
+    </v-row>
+    <v-row>
+      <v-col v-for="human in humans" :key="human.id" >
+        <human-card :onDelete="deleteHuman" :onEdit="editHuman" :human="human"></human-card>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script>
+import HumanCard from "~/components/HumanCard";
+
 export default {
+  async asyncData({$axios, params}) {
+    try {
+      let humans = await $axios.$get(`/humans/`);
+      return {humans};
+    } catch (e) {
+      // todo Разобраться как работает Nuxt error, какие статус-коды он принимает (401, 403, 404)
+      // return {humans: []};
+    }
+  },
   head() {
     return {
-      title: "Домашняя страница"
+      title: "Humans list"
     };
   },
+  components: {
+    HumanCard
+  },
+  data() {
+    return {
+      humans: []
+    };
+  },
+  methods: {
+    deleteHuman(human_id) {
+      try {
+        this.$axios.$delete(`/humans/${human_id}/`)
+          .then(res => {
+            //todo Удаление элемента из списка посредством js
+            console.log(this.humans);
+          })
+
+          .catch(err => {
+            // todo Обработка ошибки
+          })
+      } catch (e) {
+        console.log(e);
+      }
+    },
+    editHuman(human_id){
+      console.log(this.humans.find(el => el.id === human_id))
+    }
+  }
 };
 </script>
-
-<style>
-header {
-  min-height: 100vh;
-  background-position: center;
-  background-size: cover;
-  position: relative;
-}
-.text-box {
-  position: absolute;
-  top: 50%;
-  left: 10%;
-  transform: translateY(-50%);
-  color: #fff;
-}
-.text-box h1 {
-  font-family: cursive;
-  font-size: 5rem;
-}
-.text-box p {
-  font-size: 2rem;
-  font-weight: lighter;
-}
-</style>
