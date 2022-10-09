@@ -116,7 +116,9 @@ export default {
       this.editing.push(human_id);
     },
     editHumanComplete(human) {
-      let humanId = human.id;
+      this.editing = this.editing.filter(el=>{
+        return el !== human.id;
+      })
 
       this.$axios.$patch(`/humans/${humanId}/`, human)
         .then(res => {
