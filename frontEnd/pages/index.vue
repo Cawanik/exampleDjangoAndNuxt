@@ -90,11 +90,11 @@ export default {
     };
   },
   methods: {
-    deleteHuman(human_id) {
-      this.$axios.$delete(`/humans/${human_id}/`)
+    deleteHuman(humanId) {
+      this.$axios.$delete(`/humans/${humanId}/`)
         .then(res => {
           this.humans = this.humans.filter(el => {
-            return el.id !== human_id
+            return el.id !== humanId
           })
         })
         .catch(err => {
@@ -112,15 +112,15 @@ export default {
           console.log(err)
         })
     },
-    editHuman(human_id) {
-      this.editing.push(human_id);
+    editHuman(humanId) {
+      this.editing.push(humanId);
     },
     editHumanComplete(human) {
       this.editing = this.editing.filter(el=>{
         return el !== human.id;
       })
 
-      this.$axios.$patch(`/humans/${humanId}/`, human)
+      this.$axios.$patch(`/humans/${human.id}/`, human)
         .then(res => {
           let indexEditingElement = this.humans.indexOf(this.humans.find(el => {
             return el.id === res.id;
