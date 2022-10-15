@@ -1,52 +1,87 @@
 <template>
   <v-card class="v-card v-card--flat">
-    <v-container>
-      <v-row>
-        <h5 class="v-card__title">{{ human.first_name }}</h5>
-        <v-icon v-if="ageCheck" color="red" right>mdi-alert-circle</v-icon>
-      </v-row>
-    </v-container>
-    <v-card-text class="v-card__text">
-      <strong>Last name:</strong> {{ human.last_name }}
-    </v-card-text>
-    <v-card-text class="v-card__text">
-      <strong>Patronymic:</strong> {{ human.patronymic }}
-    </v-card-text>
-    <v-card-text class="v-card__text">
-      <strong>Age:</strong> {{ human.age }}
-    </v-card-text>
-    <v-card-text class="v-card__text">
-      <strong>Sex:</strong> {{ human.sex }}
-    </v-card-text>
-    <v-card-text class="v-card__text">
-      <strong>Is married:</strong> {{ human.is_married }}
-    </v-card-text>
-    <v-card-text class="v-card__text">
-      <strong>Role:</strong> {{ humanRoleName }}
-    </v-card-text>
+    <v-icon v-if="ageCheck" color="red" class="flag-warning" right>mdi-alert-circle</v-icon>
+    <h5 class="v-card__title">{{ human.first_name }}</h5>
+
+    <div v-for="human in humanFields">
+      <v-card-text class="v-card__text">
+        <strong>{{ human.key }}</strong> {{ human.value }}
+      </v-card-text>
+    </div>
+
     <v-card-actions class="action-buttons">
-      <v-btn @click="onEdit(human.id)" color="blue" class="v-btn">Edit</v-btn>
-      <v-btn @click="onDelete(human.id)" color="red" class="v-btn">Delete</v-btn>
+      <v-btn @click="onEdit()" color="blue" class="v-btn">Edit</v-btn>
+      <v-btn @click="onDelete()" color="red" class="v-btn">Delete</v-btn>
     </v-card-actions>
   </v-card>
 </template>
 
 <script>
-//todo 2) Собрать кастомный css внутри папки assets, 4) В формах сделать валидацию, 5) Сделать валидацию на бэке
+//todo 2) Собрать кастомный css внутри папки assets, 4) В формах сделать валидацию
 export default {
   name: "HumanCard",
-  props: ["human", "roles", "onDelete", "onEdit"],
-  computed: {
-    humanRoleName() {
-      return this.roles.find(role => {
-        return role.id === this.human.role_id;
-      }).name;
-    },
-    ageCheck() {
-      return this.human.age > 40
+  props: {
+    human: {
+      type: Object,
+      required: true
     }
+  },
+  data() {
+    return {
+      maxAgeWithoutWarning: 40
+    };
+  },
+  computed: {
+    ageCheck() {
+      return this.human.age > this.maxAgeWithoutWarning
+    },
+    humanFields() {
+      // TODO
+      //entries не работает, так как есть булевы значения
+      let mappedHuman = Object.keys(this.human).map(key => ({ key, value: this.human[key] }));
+      //удаление id
+      mappedHuman.splice(0,1);
+      return mappedHuman;
+    }
+  },
+  methods: {
+    // TODO
+    // Знаю, что такие комменты оставлять нельзя, они адресованы Александру Кислеру.
+    // Я себе голову разбил, нихуя не понимаю, почему $nuxt не в ебанном контексте
+    // Я прочитал, что error и другие методы nuxt доступны в некоторых жизненных циклах накста
+    // Но я просто не понимаю, как правильно заинжектить это сюда
+
+    onEdit() {
+      this.$parent.editing.push(this.human.id);
+
+      if (Object.keys(this.$parent.roles).length === 0)
+        this.$axios.$get(`/role/`)
+          .then(res =>{
+            this.$parent.roles = res;
+          })
+          .catch(err => {
+            this.$nuxt.error({statusCode: err.response.status, message: err.response.statusText});
+          });
+    },
+    onDelete() {
+      this.$axios.$delete(`/humans/${this.human.id}/`)
+        .then(res => {
+          this.$parent.humans = this.$parent.humans.filter(el => {
+            return el.id !== this.human.id;
+          })
+        })
+        .catch(err => {
+          this.$nuxt.error({statusCode: err.response.status, message: err.response.statusText})
+        })
+    },
   }
 };
 </script>
 
-
+<style scoped>
+.flag-warning {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+</style>
