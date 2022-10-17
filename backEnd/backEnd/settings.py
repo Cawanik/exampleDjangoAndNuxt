@@ -37,9 +37,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework', # add this
-    'corsheaders', # add this
-    'core' # add this
+    'rest_framework',
+    'corsheaders',
+    'core',
+    'django_cron'
 ]
 
 MIDDLEWARE = [
@@ -51,6 +52,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+CRON_CLASSES = [
+    "core.cron.DeletedClearCron"
 ]
 
 CORS_ORIGIN_WHITELIST = (

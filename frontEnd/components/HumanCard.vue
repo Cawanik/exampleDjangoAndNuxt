@@ -38,9 +38,9 @@ export default {
     humanFields() {
       // TODO
       //entries не работает, так как есть булевы значения
-      let mappedHuman = Object.keys(this.human).map(key => ({ key, value: this.human[key] }));
+      let mappedHuman = Object.keys(this.human).map(key => ({key, value: this.human[key]}));
       //удаление id
-      mappedHuman.splice(0,1);
+      mappedHuman.splice(0, 1);
       return mappedHuman;
     }
   },
@@ -56,22 +56,43 @@ export default {
 
       if (Object.keys(this.$parent.roles).length === 0)
         this.$axios.$get(`/role/`)
-          .then(res =>{
+          .then(res => {
             this.$parent.roles = res;
           })
           .catch(err => {
-            this.$nuxt.error({statusCode: err.response.status, message: err.response.statusText});
+            this.$nuxt.error({
+              statusCode: err.response.status,
+              message: err.response.data ? err.response.data : err.response.statusText
+            });
           });
     },
     onDelete() {
       this.$axios.$delete(`/humans/${this.human.id}/`)
         .then(res => {
+          if (Object.keys(this.$parent.deleted).length === 0) {
+            this.$axios.$get(`/deleted/`)
+              .catch(err => {
+                this.$nuxt.error({
+                  statusCode: err.response.status,
+                  message: err.response.data ? err.response.data : err.response.statusText
+                })
+              })
+              .then(res => {
+                this.$parent.deleted = res
+              });
+          }
+          this.$parent.deleted.append(this.$parent.humans.filter(el => {
+            return el.id === this.human.id;
+          }))
           this.$parent.humans = this.$parent.humans.filter(el => {
             return el.id !== this.human.id;
           })
         })
         .catch(err => {
-          this.$nuxt.error({statusCode: err.response.status, message: err.response.statusText})
+          this.$nuxt.error({
+            statusCode: err.response.status,
+            message: err.response.data ? err.response.data : err.response.statusText
+          })
         })
     },
   }

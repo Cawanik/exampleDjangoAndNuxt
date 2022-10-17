@@ -1,8 +1,11 @@
 <template>
   <v-app dark>
     <h1>
-      {{error.message}} {{error.statusCode}}
+      {{error.statusCode}}
     </h1>
+    <h2>
+      {{error.message}}
+    </h2>
   </v-app>
 </template>
 

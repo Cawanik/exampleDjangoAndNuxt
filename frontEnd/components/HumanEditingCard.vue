@@ -93,12 +93,30 @@ export default {
     onDelete() {
       this.$axios.$delete(`/humans/${this.human.id}/`)
         .then(res => {
+          if (Object.keys(this.$parent.deleted).length === 0) {
+            this.$axios.$get(`/deleted/`)
+              .catch(err => {
+                this.$nuxt.error({
+                  statusCode: err.response.status,
+                  message: err.response.data ? err.response.data : err.response.statusText
+                })
+              })
+              .then(res => {
+                this.$parent.deleted = res
+              });
+          }
+          this.$parent.deleted.append(this.$parent.humans.filter(el => {
+            return el.id === this.human.id;
+          }))
           this.$parent.humans = this.$parent.humans.filter(el => {
             return el.id !== this.human.id;
           })
         })
         .catch(err => {
-          this.$nuxt.error({statusCode: err.response.status, message: err.response.statusText})
+          this.$nuxt.error({
+            statusCode: err.response.status,
+            message: err.response.data ? err.response.data : err.response.statusText
+          })
         })
     },
     cancelEdit() {
@@ -122,7 +140,10 @@ export default {
           this.$parent.humans.splice(indexEditingElement, 1, res)
         })
         .catch(err => {
-          this.$nuxt.error({statusCode: err.response.status, message: err.response.statusText})
+          this.$nuxt.error({
+            statusCode: err.response.status,
+            message: err.response.data ? err.response.data : err.response.statusText
+          })
         })
     },
   }

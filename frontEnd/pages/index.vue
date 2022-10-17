@@ -5,8 +5,9 @@
         <h1 class="text-h1">All humans</h1>
       </v-col>
       <v-col cols="6" class="flex-row justify-center">
-        <human-add-dialog :roles="roles" />
+        <human-add-dialog :roles="roles"/>
         <v-btn class="v-btn">Change roles</v-btn>
+        <human-deleted-cart/>
         <v-select
           v-model="married"
           :items="selectItemsMarried"
@@ -38,6 +39,7 @@
 import HumanCard from "../components/HumanCard";
 import HumanAddDialog from "../components/HumanAddDialog";
 import HumanEditingCard from "../components/HumanEditingCard";
+import HumanDeletedCart from "../components/HumanDeletedCart";
 
 export default {
   //TODO
@@ -48,7 +50,10 @@ export default {
   async asyncData({$axios, error}) {
     let humans = await $axios.$get(`/humans/`)
       .catch(err => {
-        error({statusCode: err.response.status, message: err.response.statusText})
+        error({
+          statusCode: err.response.status,
+          message: err.response.data ? err.response.data : err.response.statusText
+        })
       });
     return {humans};
   },
@@ -58,6 +63,7 @@ export default {
     };
   },
   components: {
+    HumanDeletedCart,
     HumanAddDialog,
     HumanCard,
     HumanEditingCard
@@ -77,7 +83,8 @@ export default {
       married: [],
       humans: [],
       roles: [],
-      editing: []
+      editing: [],
+      deleted: []
     };
   },
   methods: {

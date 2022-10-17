@@ -124,18 +124,17 @@ export default {
             this.$parent.roles = res;
           })
           .catch(err => {
-            this.$nuxt.error({statusCode: err.response.status, message: err.response.statusText});
+            this.$nuxt.error({statusCode: err.response.status, message: err.response.data?err.response.data:err.response.statusText});
           });
       return this.$parent.roles;
     },
     addHuman() {
-      console.log(this.human)
       this.$axios.$post(`/humans/`, this.human)
         .then(res => {
           this.$parent.humans.push(this.human);
         })
         .catch(err => {
-          this.$nuxt.error({statusCode: err.response.status, message: err.response.statusText});
+          this.$nuxt.error({statusCode: err.response.status, message: err.response.data?err.response.data:err.response.statusText});
         })
     },
   }
