@@ -10,7 +10,7 @@
         <strong>{{ field.key }}</strong> {{ field.value }}
       </v-card-text>
       <v-card-actions>
-        <v-btn color="green" text @click="addDeletedHuman()">
+        <v-btn color="green" text @click="returnHuman(human.id)">
           Return
         </v-btn>
       </v-card-actions>
@@ -30,22 +30,10 @@ export default {
   },
 
   methods: {
-    deletedHumans() {
-      this.$axios.$get(`/deleted/`)
-        .catch(err => {
-          this.$nuxt.error({
-            statusCode: err.response.status,
-            message: err.response.data ? err.response.data : err.response.statusText
-          })
-        })
-        .then(res => {
-          this.$parent.deleted = res
-        });
+    returnHuman(id) {
+      this.$emit('return');
     },
     humanFields(human) {
-      let mappedHuman = Object.keys(human).map(key => ({key, value: human[key]}));
-      mappedHuman.splice(0, 1);
-      return mappedHuman;
     }
   }
 }

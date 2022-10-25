@@ -7,9 +7,13 @@
       <v-col cols="6" class="flex-row justify-center">
         <human-add-dialog
           v-on:add="human=>addCard(human)"
-          :roles="roles"/>
+          :roles="roles"
+        />
         <v-btn class="v-btn">Change roles</v-btn>
-        <human-deleted-cart :deleted="deleted"/>
+        <human-deleted-cart
+          v-on:return="del=>returnDelete(del)"
+          :deleted="deleted"
+        />
         <v-select
           v-model="married"
           :items="selectItemsMarried"
@@ -96,6 +100,12 @@ export default {
   },
 
   methods: {
+    returnDelete(id){
+      this.humans.push(this.deleted.find(del => del.id === id));
+      this.deleted = this.deleted.filter(del => del.id !== id);
+      this.cancelEdit(id)
+    },
+
     addCard(human){
       human.role = this.roles.find(role=>role.id = human.role).name
       delete human.password

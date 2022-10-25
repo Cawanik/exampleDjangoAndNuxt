@@ -15,7 +15,7 @@ class HumanAddSerializer(serializers.ModelSerializer):
 
 
 class HumanSerializer(serializers.ModelSerializer):
-    role = serializers.SlugRelatedField(read_only=True, slug_field='name')
+    role = RoleSerializer()
 
     class Meta:
         model = Human
