@@ -28,3 +28,12 @@ class DeletedSerializer(serializers.ModelSerializer):
     class Meta:
         model = Deleted
         fields = ["id", "first_name", "last_name", "patronymic", "age", "sex", "is_married", "role"]
+
+
+class AllSerializers(serializers.ModelSerializer):
+    Human = HumanSerializer(read_only=True)
+    Role = RoleSerializer(read_only=True)
+    Deleted = DeletedSerializer(read_only=True)
+
+    class Meta:
+        fields = ['Human', 'Role', 'Deleted']

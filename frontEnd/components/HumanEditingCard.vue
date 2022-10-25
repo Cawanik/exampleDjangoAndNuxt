@@ -3,61 +3,70 @@
     <v-text-field
       v-model="human.first_name"
       label="First name*"
+      :error-messages="errors.first_name"
       required
     />
     <v-text-field
       v-model="human.last_name"
+      :error-messages="errors.last_name"
       label="Last name*"
       required
     />
     <v-text-field
       v-model="human.patronymic"
+      :error-messages="errors.patronymic"
       label="Patronymic"
       required
     />
     <v-text-field
       v-model="human.age"
+      :error-messages="errors.age"
       label="Age*"
       type="number"
       required
     />
     <v-text-field
       v-model="human.email"
+      :error-messages="errors.email"
       label="E-mail*"
       type="email"
       required
     />
     <v-text-field
       v-model="human.password"
+      :error-messages="errors.password"
       label="Password*"
       type="password"
       required
     />
     <v-select
       v-model="human.sex"
+      :error-messages="errors.sex"
       :items="selectItemsSex"
       label="Sex*"
       required
     />
     <v-select
-      label="Status*"
       v-model="human.is_married"
+      :error-messages="errors.is_married"
       :items="selectItemsMarried"
       item-text="name"
       item-value="value"
+      label="Status*"
       required
     />
     <v-select
       v-model="roleId"
+      :error-messages="errors.roles"
       :items="roles"
       item-text="name"
       item-value="id"
       label="Role*"
     />
     <v-card-actions class="action-buttons">
-      <v-btn @click="cancelEdit()" class="v-btn">Cancel</v-btn>
-      <v-btn @click="onSubmit()" class="v-btn" color="green">Submit</v-btn>
-      <v-btn @click="onDelete()" class="v-btn" color="red">Delete</v-btn>
+      <v-btn @click="cancelEdit()">Cancel</v-btn>
+      <v-btn @click="onSubmit()" color="green">Submit</v-btn>
+      <v-btn @click="onDelete()" color="red">Delete</v-btn>
     </v-card-actions>
   </v-card>
 </template>
@@ -70,6 +79,7 @@ export default {
       type: Object,
       required: true
     },
+
     roles: {
       type: Array,
       required: true
@@ -81,36 +91,23 @@ export default {
         {name: 'Is married', value: true},
         {name: 'Is not married', value: false}
       ],
+
       selectItemsSex: [
         'Women',
         'Men',
         'Middle'
       ],
-      roleId: 0,
+
+      errors:{},
+
+      roleId: this.roles.find(el=>el.name=this.human.role).id,
     };
   },
   methods: {
     onDelete() {
       this.$axios.$delete(`/humans/${this.human.id}/`)
         .then(res => {
-          if (Object.keys(this.$parent.deleted).length === 0) {
-            this.$axios.$get(`/deleted/`)
-              .catch(err => {
-                this.$nuxt.error({
-                  statusCode: err.response.status,
-                  message: err.response.data ? err.response.data : err.response.statusText
-                })
-              })
-              .then(res => {
-                this.$parent.deleted = res
-              });
-          }
-          this.$parent.deleted.append(this.$parent.humans.filter(el => {
-            return el.id === this.human.id;
-          }))
-          this.$parent.humans = this.$parent.humans.filter(el => {
-            return el.id !== this.human.id;
-          })
+          this.$emit('delete');
         })
         .catch(err => {
           this.$nuxt.error({
@@ -119,31 +116,22 @@ export default {
           })
         })
     },
-    cancelEdit() {
-      this.$parent.editing = this.$parent.editing.filter(el => {
-        return el !== this.human.id;
-      })
-    },
-    onSubmit() {
-      this.cancelEdit();
-      if (this.roleId) {
-        this.human.role = this.roleId;
-      } else {
-        this.human.role = this.roles.find(el => el.name === this.human.role).id;
-      }
 
+    cancelEdit() {
+      this.errors = {};
+      this.$emit('cancel');
+    },
+
+    onSubmit() {
+      this.errors = {};
+      this.human.role = this.roleId
       this.$axios.$patch(`/humans/${this.human.id}/`, this.human)
         .then(res => {
-          let indexEditingElement = this.$parent.humans.indexOf(this.$parent.humans.find(el => {
-            return el.id === res.id;
-          }));
-          this.$parent.humans.splice(indexEditingElement, 1, res)
+          this.cancelEdit();
+          this.$emit('submit');
         })
         .catch(err => {
-          this.$nuxt.error({
-            statusCode: err.response.status,
-            message: err.response.data ? err.response.data : err.response.statusText
-          })
+          this.errors = err.response.data[0];
         })
     },
   }

@@ -5,9 +5,11 @@
         <h1 class="text-h1">All humans</h1>
       </v-col>
       <v-col cols="6" class="flex-row justify-center">
-        <human-add-dialog :roles="roles"/>
+        <human-add-dialog
+          v-on:add="human=>addCard(human)"
+          :roles="roles"/>
         <v-btn class="v-btn">Change roles</v-btn>
-        <human-deleted-cart/>
+        <human-deleted-cart :deleted="deleted"/>
         <v-select
           v-model="married"
           :items="selectItemsMarried"
@@ -27,47 +29,52 @@
 
     </v-row>
     <v-row>
-      <v-col class="col-md-4 col-sm-6" v-for="human in filteredHumans()" :key="human.id">
-        <human-editing-card v-if="editing.includes(human.id)" :human="human" :roles="roles"/>
-        <human-card v-else :human="human"/>
+      <v-col
+        cols="4"
+        v-for="human in filteredHumans()"
+        :key="human.id"
+      >
+        <human-editing-card
+          v-if="editing.includes(human.id)"
+          v-on:delete="moveToDelete(human.id)"
+          v-on:cancel="cancelEdit(human.id)"
+          v-on:submit="editSubmit(human.id)"
+          :human="human"
+          :roles="roles"
+        />
+        <human-card
+          v-else
+          v-on:delete="moveToDelete(human.id)"
+          v-on:edit="addEdit(human.id)"
+          :human="human"
+        />
       </v-col>
     </v-row>
   </v-container>
 </template>
 
 <script>
-import HumanCard from "../components/HumanCard";
-import HumanAddDialog from "../components/HumanAddDialog";
-import HumanEditingCard from "../components/HumanEditingCard";
-import HumanDeletedCart from "../components/HumanDeletedCart";
 
 export default {
-  //TODO
-  //401 - запрос не был применён, поскольку ему не хватает действительных учётных данных для целевого ресурса.
-  //403 - доступ запрещён и привязан к логике приложения
-  //404 - сервер не может найти запрошенный ресурс
 
   async asyncData({$axios, error}) {
-    let humans = await $axios.$get(`/humans/`)
+    let {humans, roles, deleted} = await $axios.$get(`/humans/`)
       .catch(err => {
         error({
           statusCode: err.response.status,
           message: err.response.data ? err.response.data : err.response.statusText
         })
       });
-    return {humans};
+
+    return {humans, roles, deleted};
   },
+
   head() {
     return {
       title: "Humans list"
     };
   },
-  components: {
-    HumanDeletedCart,
-    HumanAddDialog,
-    HumanCard,
-    HumanEditingCard
-  },
+
   data() {
     return {
       selectItemsMarried: [
@@ -87,19 +94,48 @@ export default {
       deleted: []
     };
   },
+
   methods: {
+    addCard(human){
+      human.role = this.roles.find(role=>role.id = human.role).name
+      delete human.password
+      delete human.email
+      this.humans.push(human)
+    },
+
+    editSubmit(id) {
+      this.cancelEdit(id);
+
+      this.$axios.$get(`/humans/${id}`)
+        .then(res => {
+          this.humans[this.humans.findIndex(hum=>hum.id === id)] = res
+        })
+    },
+
+    cancelEdit(id) {
+      this.editing = this.editing.filter(ed => ed !== id);
+    },
+
+    addEdit(id) {
+      this.editing.push(id)
+    },
+
+    moveToDelete(id) {
+      this.deleted.push(this.humans.find(human => human.id === id));
+      this.humans = this.humans.filter(human => human.id !== id);
+      this.cancelEdit(id)
+    },
+
     checkMarried(human) {
-      if (this.married.length === 0) return true;
-      return this.married === human.is_married;
+      return this.married.length === 0 ? true : this.married === human.is_married;
     },
+
     checkSex(human) {
-      if (this.sex.length === 0) return true;
-      return this.sex.includes(human.sex);
+      return this.sex.length === 0 ? true : this.sex.includes(human.sex);
     },
+
     filteredHumans() {
-      return this.humans.filter(human => {
-        return this.checkMarried(human) && this.checkSex(human);
-      });
+      return this.humans.filter(human => this.checkMarried(human) && this.checkSex(human));
     }
   },
 }

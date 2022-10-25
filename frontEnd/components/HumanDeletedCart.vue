@@ -5,7 +5,7 @@
         Return deletes
       </v-btn>
     </template>
-    <v-card v-for="human in this.$parent.deleted">
+    <v-card v-for="human in deleted" :key="deleted.id">
       <v-card-text v-for="field in humanFields(human)" class="v-card__text">
         <strong>{{ field.key }}</strong> {{ field.value }}
       </v-card-text>
@@ -22,20 +22,25 @@
 export default {
   name: "HumanDeletedCart",
 
+  props: {
+    deleted: {
+      type: Array,
+      required: true
+    }
+  },
+
   methods: {
     deletedHumans() {
-      if (Object.keys(this.$parent.deleted).length === 0) {
-        this.$axios.$get(`/deleted/`)
-          .catch(err => {
-            this.$nuxt.error({
-              statusCode: err.response.status,
-              message: err.response.data ? err.response.data : err.response.statusText
-            })
+      this.$axios.$get(`/deleted/`)
+        .catch(err => {
+          this.$nuxt.error({
+            statusCode: err.response.status,
+            message: err.response.data ? err.response.data : err.response.statusText
           })
-          .then(res => {
-            this.$parent.deleted = res
-          });
-      }
+        })
+        .then(res => {
+          this.$parent.deleted = res
+        });
     },
     humanFields(human) {
       let mappedHuman = Object.keys(human).map(key => ({key, value: human[key]}));

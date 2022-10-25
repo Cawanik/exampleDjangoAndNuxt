@@ -11,11 +11,11 @@ from django.utils.timezone import make_aware
 def check_errors(request_data):
     err = []
     serializer = HumanAddSerializer(data=request_data)
-    if request_data['first_name'].isdigit() \
-            or request_data['last_name'].isdigit() \
-            or request_data['patronymic'].isdigit():
-        err.append('Name cant contain digit')
+
+    if int(request_data['age']) < 0:
+        err.append({'age': ['Age cant contain digit below zero']})
     if not serializer.is_valid():
+        print(serializer.errors)
         err.append('Serializers errors')
 
     return err
@@ -25,6 +25,12 @@ class HumanViewSet(viewsets.ModelViewSet):
     queryset = Human.objects.all()
     serializer_class = HumanSerializer
 
+    def list(self, request, *args):
+        all_fields = {'humans': HumanSerializer(Human.objects.all(), many=True).data,
+                      'roles': RoleSerializer(Role.objects.all(), many=True).data,
+                      'deleted': DeletedSerializer(Deleted.objects.all(), many=True).data}
+        return Response(all_fields, status=status.HTTP_200_OK)
+
     def create(self, request, *args, **kwargs):
         errors = check_errors(request.data)
         if not errors:
@@ -32,7 +38,7 @@ class HumanViewSet(viewsets.ModelViewSet):
             return viewsets.ModelViewSet.create(self, request)
         else:
             print('Has error!', errors)
-            return Response(','.join(errors), status=status.HTTP_400_BAD_REQUEST)
+            return Response(errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     def update(self, request, *args, **kwargs):
         errors = check_errors(request.data)
@@ -41,7 +47,7 @@ class HumanViewSet(viewsets.ModelViewSet):
             return viewsets.ModelViewSet.update(self, request)
         else:
             print('Has error!', errors)
-            return Response(','.join(errors), status=status.HTTP_400_BAD_REQUEST)
+            return Response(errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     def destroy(self, request, *args, **kwargs):
         on_delete = self.get_object()

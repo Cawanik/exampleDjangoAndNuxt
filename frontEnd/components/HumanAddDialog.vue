@@ -1,7 +1,7 @@
 <template>
   <v-dialog max-width="600px">
     <template v-slot:activator="{ on, attrs }">
-      <v-btn class="text--black" v-bind="attrs" v-on="on" @click="rolesFill()">
+      <v-btn class="text--black" v-bind="attrs" v-on="on">
         Add human
       </v-btn>
     </template>
@@ -13,20 +13,30 @@
         <v-row>
           <v-col cols="12" sm="6" md="4">
             <v-text-field
+              :error-messages="errors.first_name"
               v-model="human.first_name"
               label="First name*"
               required>
             </v-text-field>
           </v-col>
           <v-col cols="12" sm="6" md="4">
-            <v-text-field v-model="human.last_name" label="Last name*" required/>
+            <v-text-field
+              :error-messages="errors.last_name"
+              v-model="human.last_name"
+              label="Last name*"
+              required/>
           </v-col>
           <v-col cols="12" sm="6" md="4">
-            <v-text-field v-model="human.patronymic" label="Patronymic" hint="if no patronymic stay empty"
-                          persistent-hint/>
+            <v-text-field
+              :error-messages="errors.patronymic"
+              v-model="human.patronymic"
+              label="Patronymic"
+              hint="if no patronymic stay empty"
+              persistent-hint/>
           </v-col>
           <v-col cols="12" sm="6">
             <v-select
+              :error-messages="errors.sex"
               v-model="human.sex"
               :items="selectItemsSex"
               label="Sex*"
@@ -35,6 +45,7 @@
           </v-col>
           <v-col cols="12" sm="6">
             <v-text-field
+              :error-messages="errors.age"
               v-model="human.age"
               label="Age*"
               type="number"
@@ -43,6 +54,7 @@
           </v-col>
           <v-col cols="12" sm="6">
             <v-text-field
+              :error-messages="errors.email"
               v-model="human.email"
               label="E-mail*"
               type="email"
@@ -51,6 +63,7 @@
           </v-col>
           <v-col cols="12" sm="6">
             <v-text-field
+              :error-messages="errors.password"
               v-model="human.password"
               label="Password*"
               type="password"
@@ -60,6 +73,7 @@
           <v-col cols="12" sm="6">
             <v-select
               label="Status*"
+              :error-messages="errors.is_married"
               v-model="human.is_married"
               :items="selectItemsMarried"
               item-text="name"
@@ -92,6 +106,12 @@
 <script>
 export default {
   name: "HumanAddDialog",
+  props: {
+    roles:{
+      type: Array,
+      required: true
+    }
+  },
   data() {
     return {
       human: {
@@ -114,27 +134,19 @@ export default {
         'Men',
         'Middle'
       ],
+      errors: {}
     };
   },
-  methods:{
-    rolesFill() {
-      if (Object.keys(this.$parent.roles).length === 0)
-        this.$axios.$get(`/role/`)
-          .then(res => {
-            this.$parent.roles = res;
-          })
-          .catch(err => {
-            this.$nuxt.error({statusCode: err.response.status, message: err.response.data?err.response.data:err.response.statusText});
-          });
-      return this.$parent.roles;
-    },
+  methods: {
     addHuman() {
+      this.errors = {};
       this.$axios.$post(`/humans/`, this.human)
         .then(res => {
-          this.$parent.humans.push(this.human);
+          this.human = res;
+          this.$emit('add', this.human);
         })
         .catch(err => {
-          this.$nuxt.error({statusCode: err.response.status, message: err.response.data?err.response.data:err.response.statusText});
+          this.errors = err.response.data[0];
         })
     },
   }
